@@ -4,10 +4,12 @@
     "$className": "DataModel",
 
     "ReplicatedFirst": {
+      "$ignoreUnknownInstances": true,
       "$path": "src/Replicated/First"
     },
 
     "ReplicatedStorage": {
+      "$ignoreUnknownInstances": true,
       "Packages": {
         "$path": "Packages"
       },
@@ -15,10 +17,12 @@
     },
 
     "ServerScriptService": {
+      "$ignoreUnknownInstances": true,
       "$path": "src/Server/Scripts"
     },
 
     "ServerStorage": {
+      "$ignoreUnknownInstances": true,
       "ServerPackages": {
         "$path": "ServerPackages"
       },
@@ -26,15 +30,18 @@
     },
 
     "StarterPack": {
+      "$ignoreUnknownInstances": true,
       "$path": "src/Starter/Pack"
     },
 
     "StarterPlayer": {
       "StarterPlayerScripts": {
+        "$ignoreUnknownInstances": true,
         "$path": "src/Starter/Player"
       },
 
       "StarterCharacterScripts":{
+        "$ignoreUnknownInstances": true,
         "$path": "src/Starter/Character"
       }
     }
