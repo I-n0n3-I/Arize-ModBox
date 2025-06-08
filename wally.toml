@@ -6,6 +6,7 @@ realm = "shared"
 
 [dependencies]
 Trove = "sleitnick/trove@1.5.0"
+GoodSignal = "stravant/goodsignal@0.3.0"
 
 [server-dependencies]
 ProfileService = "firebird702/profileservice@1.1.0"
