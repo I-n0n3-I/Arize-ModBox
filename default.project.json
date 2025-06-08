@@ -9,7 +9,7 @@
     },
 
     "ReplicatedStorage": {
-      
+      "$ignoreUnknownInstances": true,
       "Packages": {
         "$path": "Packages"
       },
