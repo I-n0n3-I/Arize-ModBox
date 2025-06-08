@@ -1,0 +1,25 @@
+{
+  "ClassName": "Folder",
+  "Children": [
+    {
+      "Name": "_Bridge",
+      "ClassName": "RemoteEvent"
+    },
+    {
+      "Name": "_Gateway",
+      "ClassName": "RemoteFunction"
+    },
+    {
+      "Name": "_ServerChannel",
+      "ClassName": "BindableEvent"
+    },
+    {
+      "Name": "_ClientChannel",
+      "ClassName": "BindableEvent"
+    },
+    {
+      "Name": "_Request",
+      "ClassName": "BindableFunction"
+    }
+  ]
+}

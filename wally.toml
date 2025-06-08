@@ -1,0 +1,11 @@
+[package]
+name = "shifat/rojo-template"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+Trove = "sleitnick/trove@1.5.0"
+
+[server-dependencies]
+ProfileService = "firebird702/profileservice@1.1.0"

@@ -1,0 +1,42 @@
+{
+  "name": "Rojo-Template",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedFirst": {
+      "$path": "src/Replicated/First"
+    },
+
+    "ReplicatedStorage": {
+      "Packages": {
+        "$path": "Packages"
+      },
+      "$path": "src/Replicated/Storage"
+    },
+
+    "ServerScriptService": {
+      "$path": "src/Server/Scripts"
+    },
+
+    "ServerStorage": {
+      "ServerPackages": {
+        "$path": "ServerPackages"
+      },
+      "$path": "src/Server/Storage"
+    },
+
+    "StarterPack": {
+      "$path": "src/Starter/Pack"
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/Starter/Player"
+      },
+
+      "StarterCharacterScripts":{
+        "$path": "src/Starter/Character"
+      }
+    }
+  }
+}
