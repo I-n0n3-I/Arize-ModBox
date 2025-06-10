@@ -16,6 +16,27 @@ local StateToBool: { [string]: boolean } = {
 --<>--
 
 --|| Defining Types ||--
+
+--[=[
+    @type object_Cooldown_t
+    Represents an individual cooldown instance.
+
+    Fields:
+    - `Name` (string): The name of the cooldown.
+    - `Duration` (number): The duration before cooldown expires.
+    - `Started` (GoodSignal.Signal<any>): Fires when cooldown starts.
+    - `Ended` (GoodSignal.Signal<any>): Fires when cooldown ends.
+    - `IsActive(self: object_Cooldown_t) -> boolean`: Returns whether the cooldown is active.
+    - `Toggle(self: object_Cooldown_t, Value: boolean | string) -> ()`: Toggles the cooldown on or off.
+
+    Usage Example:
+    ```lua
+    local sprintCooldown = Manager.newCooldown(player, "Sprint", 5)
+    if sprintCooldown:IsActive() then
+        print("Cooldown is in effect!")
+    end
+    ```
+]=]
 export type object_Cooldown_t = {
 	Name: string,
 	Duration: number,
@@ -27,6 +48,21 @@ export type object_Cooldown_t = {
 	Toggle: (self: object_Cooldown_t, Value: boolean | string) -> (),
 }
 
+--[=[
+    @type CooldownListofPlayer_t
+    Stores cooldowns for each player.
+
+    Structure:
+    - `{[string]: object_Cooldown_t}`: Maps cooldown names to cooldown instances.
+
+    Usage Example:
+    ```lua
+    local cooldowns = Manager:GetAll(player)
+    for name, cooldown in pairs(cooldowns) do
+        print(name, cooldown:IsActive())
+    end
+    ```
+]=]
 export type CooldownListofPlayer_t = {
 	[string]: object_Cooldown_t,
 }
@@ -58,6 +94,10 @@ end
 
 --|| Module ||--
 
+--[=[
+    @class CooldownManager
+    Handles cooldown tracking for players.
+]=]
 local Manager = {
 	_Name = "CooldownManager",
 	_MadeBy = "Davidrifat",
@@ -69,8 +109,16 @@ class_Cooldown.__index = class_Cooldown
 
 local Cooldowns: { [number]: CooldownListofPlayer_t } = {}
 
--- Creates a new cooldown object for a player
-function class_Cooldown.new(Player: Player, cooldownName: string, cooldownDuration: number): object_Cooldown_t
+--[=[
+    @within object_Cooldown_t
+    @param Player Player -- The player for whom the cooldown is being created.
+    @param cooldownName string -- The name of the cooldown.
+    @param cooldownDuration number -- Duration in seconds before cooldown resets.
+    @return object_Cooldown_t -- A new cooldown instance.
+
+    Creates a new cooldown object for a player.
+]=]
+function class_Cooldown._new(Player: Player, cooldownName: string, cooldownDuration: number): object_Cooldown_t
 	local self = setmetatable({}, class_Cooldown)
 
 	self.Name = cooldownName
@@ -87,19 +135,46 @@ function class_Cooldown.new(Player: Player, cooldownName: string, cooldownDurati
 	return self
 end
 
--- Returns whether the cooldown is active
+--[=[
+    @within object_Cooldown_t
+    @return boolean -- Returns true if the cooldown is active.
+    Determines whether the cooldown is currently in effect.
+
+    Usage Example:
+    ```lua
+    if cooldown:IsActive() then
+        print("Cooldown is running")
+    end
+    ```
+]=]
 function class_Cooldown:IsActive(): boolean
 	return self._IsActive
 end
 
--- Sets the active state of the cooldown
+--[=[
+    @within object_Cooldown_t
+    @param Value boolean | string -- The value to set the cooldown state.
+    @private
+    Sets the active state of the cooldown.
+]=]
 function class_Cooldown:_SetActive(Value: boolean)
 	assert(Value ~= nil, "No value was given.")
 
 	self._IsActive = Value
 end
 
--- Toggles the cooldown on or off
+--[=[
+    @within object_Cooldown_t
+    @param Value boolean | string -- The value to toggle the cooldown.
+    Toggles the cooldown on or off based on a boolean or string input.
+    Valid string values: `"on"` or `"off"` (case insensitive).
+
+    Usage Example:
+    ```lua
+    cooldown:Toggle("on") -- Starts the cooldown
+    cooldown:Toggle(false) -- Stops the cooldown
+    ```
+]=]
 function class_Cooldown:Toggle(Value: boolean | string)
 	assert(Value, "Value must be given.")
 	assert(
@@ -126,7 +201,16 @@ function class_Cooldown:Toggle(Value: boolean | string)
 	end
 end
 
--- Initializes the cooldown table for a player
+--[=[
+    @within CooldownManager
+    @param Player Player -- The player whose cooldowns are being initialized.
+    Initializes the cooldown system for a player.
+
+    Usage Example:
+    ```lua
+    Manager:Init(player)
+    ```
+]=]
 function Manager:Init(Player: Player)
 	assert(Player, "No player was given.")
 	assert(not Cooldowns[Player.UserId], "Player cooldowns already initialized.")
@@ -135,16 +219,43 @@ function Manager:Init(Player: Player)
 	warn(`Player {Player.Name} cooldowns inittiated.`)
 end
 
--- Creates a new cooldown for a player
+--[=[
+    @within CooldownManager
+    @param Player Player -- The player for whom the cooldown is being created.
+    @param cooldownName string -- The name of the cooldown.
+    @param cooldownDuration number -- Duration in seconds before cooldown resets.
+    @return object_Cooldown_t -- A new cooldown instance.
+
+    Creates a new cooldown for a player.
+
+    Usage Example:
+    ```lua
+    local sprintCooldown = Manager.newCooldown(player, "Sprint", 5)
+    ```
+]=]
 function Manager.newCooldown(Player: Player, cooldownName: string, cooldownDuration: number): object_Cooldown_t
 	assert(Player, "No player was given.")
 	assert(cooldownName, "cooldownName must be given.")
 	assert(cooldownDuration, "cooldownDuration must be given.")
 
-	return class_Cooldown.new(Player, cooldownName, cooldownDuration)
+	return class_Cooldown._new(Player, cooldownName, cooldownDuration)
 end
 
--- Checks if a cooldown exists for a player
+--[=[
+    @within CooldownManager
+    @param Player Player -- The player whose cooldown is being checked.
+    @param cooldownName string -- The name of the cooldown.
+    @return boolean -- Whether the cooldown exists.
+
+    Checks if a cooldown exists for a player.
+
+    Usage Example:
+    ```lua
+    if Manager:DoesCooldownExist(player, "Sprint") then
+        print("Cooldown is active")
+    end
+    ```
+]=]
 function Manager:DoesCooldownExist(Player: Player, cooldownName: string): boolean
 	assert(Player, "No player was given.")
 	assert(Cooldowns[Player.UserId], "Player cooldowns not found.")
@@ -154,7 +265,19 @@ function Manager:DoesCooldownExist(Player: Player, cooldownName: string): boolea
 	return Cooldowns[Player.UserId][cooldownName] ~= nil
 end
 
--- Gets a specific cooldown for a player
+--[=[
+    @within CooldownManager
+    @param Player Player -- The player whose cooldown is being retrieved.
+    @param cooldownName string -- The name of the cooldown.
+    @return object_Cooldown_t -- The cooldown object.
+
+    Retrieves a specific cooldown for a player.
+
+    Usage Example:
+    ```lua
+    local sprintCooldown = Manager:Get(player, "Sprint")
+    ```
+]=]
 function Manager:Get(Player: Player, cooldownName: string): object_Cooldown_t
 	assert(Player, "No player was given.")
 	assert(cooldownName, "cooldownName must be given.")
@@ -165,19 +288,44 @@ function Manager:Get(Player: Player, cooldownName: string): object_Cooldown_t
 	return Cooldowns[Player.UserId][cooldownName]
 end
 
--- Gets all cooldowns for a player
+--[=[
+    @within CooldownManager
+    @param Player Player -- The player whose cooldowns are being retrieved.
+    @return CooldownListofPlayer_t -- A list of all cooldowns for the player.
+
+    Gets all cooldowns associated with a player.
+
+    Usage Example:
+    ```lua
+    local allCooldowns = Manager:GetAll(player)
+    ```
+]=]
 function Manager:GetAll(Player: Player): CooldownListofPlayer_t
 	assert(Player, "No player was given.")
 	assert(Cooldowns[Player.UserId], "Player cooldowns not found.")
 	return Cooldowns[Player.UserId]
 end
 
--- Gets the list of all player cooldowns (internal)
+--[=[
+    @within CooldownManager
+    @private
+    Gets the list of all player cooldowns (internal).
+]=]
 function Manager:_GetListOfAllPlayerCooldowns(): { [number]: CooldownListofPlayer_t }
 	return Cooldowns
 end
 
--- Removes a specific cooldown for a player and cleans up signals
+--[=[
+    @within CooldownManager
+    @param Player Player -- The player whose cooldown is being removed.
+    @param cooldownName string -- The name of the cooldown.
+    Removes a specific cooldown instance and cleans up associated signals.
+
+    Usage Example:
+    ```lua
+    Manager:Remove(player, "Sprint")
+    ```
+]=]
 function Manager:Remove(Player: Player, cooldownName: string)
 	assert(Player, "No player was given.")
 	assert(cooldownName, "cooldownName must be given.")
@@ -190,7 +338,16 @@ function Manager:Remove(Player: Player, cooldownName: string)
 	Cooldowns[Player.UserId][cooldownName] = nil
 end
 
--- Cleans up all cooldowns for a player
+--[=[
+    @within CooldownManager
+    @param Player Player -- The player whose cooldowns are being cleaned up.
+    Removes all cooldowns assigned to a player and releases any associated resources.
+
+    Usage Example:
+    ```lua
+    Manager:Cleanup(player)
+    ```
+]=]
 function Manager:Cleanup(Player: Player)
 	assert(Player, "No player was given.")
 
