@@ -19,6 +19,7 @@ local StateToBool: { [string]: boolean } = {
 
 --[=[
     @type object_Cooldown_t
+
     Represents an individual cooldown instance.
 
     Fields:
@@ -28,13 +29,12 @@ local StateToBool: { [string]: boolean } = {
     - `Ended` (GoodSignal.Signal<any>): Fires when cooldown ends.
     - `IsActive(self: object_Cooldown_t) -> boolean`: Returns whether the cooldown is active.
     - `Toggle(self: object_Cooldown_t, Value: boolean | string) -> ()`: Toggles the cooldown on or off.
+    - `GetTimeUntilReady(self: object_Cooldown_t) -> number`: Returns the time remaining before cooldown expires.
 
     Usage Example:
     ```lua
     local sprintCooldown = Manager.newCooldown(player, "Sprint", 5)
-    if sprintCooldown:IsActive() then
-        print("Cooldown is in effect!")
-    end
+    print(sprintCooldown.Name .. " was created!")
     ```
 ]=]
 export type object_Cooldown_t = {
@@ -46,10 +46,12 @@ export type object_Cooldown_t = {
 
 	IsActive: (self: object_Cooldown_t) -> boolean,
 	Toggle: (self: object_Cooldown_t, Value: boolean | string) -> (),
+	GetTimeUntilReady: (self: object_Cooldown_t) -> number,
 }
 
 --[=[
     @type CooldownListofPlayer_t
+
     Stores cooldowns for each player.
 
     Structure:
@@ -73,7 +75,8 @@ export type CooldownListofPlayer_t = {
 
 -- Starts the cooldown and fires the Started signal
 local function Start(Cooldown: object_Cooldown_t)
-	(Cooldown :: any):_SetActive(true)
+	(Cooldown :: any):_SetActive(true);
+	(Cooldown :: any)._StartedAt = tick()
 	Cooldown.Started:Fire()
 	task.delay(Cooldown.Duration, function()
 		if Cooldown:IsActive() == false then
@@ -96,6 +99,7 @@ end
 
 --[=[
     @class CooldownManager
+
     Handles cooldown tracking for players.
 ]=]
 local Manager = {
@@ -123,8 +127,11 @@ function class_Cooldown._new(Player: Player, cooldownName: string, cooldownDurat
 
 	self.Name = cooldownName
 	self.Duration = cooldownDuration
+
 	self._IsActive = false
+	self._StartedAt = 0
 	self._Signals = Trove.new() :: Trove.Trove
+
 	self.Started = self._Signals:Add(GoodSignal.new(), "DisconnectAll")
 	self.Ended = self._Signals:Add(GoodSignal.new(), "DisconnectAll")
 
@@ -138,6 +145,7 @@ end
 --[=[
     @within object_Cooldown_t
     @return boolean -- Returns true if the cooldown is active.
+
     Determines whether the cooldown is currently in effect.
 
     Usage Example:
@@ -155,6 +163,7 @@ end
     @within object_Cooldown_t
     @param Value boolean | string -- The value to set the cooldown state.
     @private
+
     Sets the active state of the cooldown.
 ]=]
 function class_Cooldown:_SetActive(Value: boolean)
@@ -165,13 +174,31 @@ end
 
 --[=[
     @within object_Cooldown_t
+    @return number -- Time remaining until cooldown ends.
+
+    Calculates the remaining time until cooldown is complete.
+]=]
+function class_Cooldown:GetTimeUntilReady(): number
+	if not self._IsActive or not self._StartedAt or self._StartedAt == 0 then
+		return 0
+	end
+	assert(self.Duration > 0, "Cooldown duration has to be greater than zero(0)")
+	local elapsed = tick() - self._StartedAt
+	return math.max(0, self.Duration - elapsed)
+end
+
+--[=[
+    @within object_Cooldown_t
     @param Value boolean | string -- The value to toggle the cooldown.
+
     Toggles the cooldown on or off based on a boolean or string input.
     Valid string values: `"on"` or `"off"` (case insensitive).
 
     Usage Example:
     ```lua
     cooldown:Toggle("on") -- Starts the cooldown
+    cooldown:Toggle("off") -- Stops the cooldown
+    cooldown:Toggle(true) -- Starts the cooldown
     cooldown:Toggle(false) -- Stops the cooldown
     ```
 ]=]
@@ -204,6 +231,7 @@ end
 --[=[
     @within CooldownManager
     @param Player Player -- The player whose cooldowns are being initialized.
+
     Initializes the cooldown system for a player.
 
     Usage Example:
@@ -216,7 +244,6 @@ function Manager:Init(Player: Player)
 	assert(not Cooldowns[Player.UserId], "Player cooldowns already initialized.")
 
 	Cooldowns[Player.UserId] = {}
-	warn(`Player {Player.Name} cooldowns inittiated.`)
 end
 
 --[=[
@@ -308,8 +335,10 @@ end
 
 --[=[
     @within CooldownManager
+    @return { [number]: CooldownListofPlayer_t } -- A list of all cooldowns in the game.
     @private
-    Gets the list of all player cooldowns (internal).
+
+    Gets the list of every player cooldowns (internal).
 ]=]
 function Manager:_GetListOfAllPlayerCooldowns(): { [number]: CooldownListofPlayer_t }
 	return Cooldowns
@@ -319,6 +348,7 @@ end
     @within CooldownManager
     @param Player Player -- The player whose cooldown is being removed.
     @param cooldownName string -- The name of the cooldown.
+
     Removes a specific cooldown instance and cleans up associated signals.
 
     Usage Example:
@@ -341,6 +371,7 @@ end
 --[=[
     @within CooldownManager
     @param Player Player -- The player whose cooldowns are being cleaned up.
+
     Removes all cooldowns assigned to a player and releases any associated resources.
 
     Usage Example:
